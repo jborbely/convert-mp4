@@ -6,24 +6,18 @@ import threading
 import time
 
 from msl.io import search
-from msl.qt import (
-    application,
-    prompt,
-    QtWidgets,
-    Qt,
-    QtCore,
-    Button,
-)
+from msl.qt import Button
+from msl.qt import Qt
+from msl.qt import QtCore
+from msl.qt import QtWidgets
+from msl.qt import application
+from msl.qt import prompt
 from msl.qt.convert import to_qicon
-from msl.qt.utils import (
-    drag_drop_paths,
-    screen_geometry,
-)
+from msl.qt.utils import drag_drop_paths
+from msl.qt.utils import screen_geometry
 
-from .workers import (
-    LoadMovieWorker,
-    ConvertMovieWorker
-)
+from .workers import ConvertMovieWorker
+from .workers import LoadMovieWorker
 
 
 class TableDelegate(QtWidgets.QItemDelegate):

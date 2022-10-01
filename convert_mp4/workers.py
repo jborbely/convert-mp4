@@ -2,10 +2,8 @@ import os
 import re
 import subprocess
 
-from msl.qt import (
-    QtCore,
-    Signal
-)
+from msl.qt import QtCore
+from msl.qt import Signal
 
 from .movie import Movie
 
