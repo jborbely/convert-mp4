@@ -66,6 +66,7 @@ class ConvertMovieWorker(QtCore.QRunnable):
             else:
                 dirname = os.path.dirname(self.movie.path)
                 subs = self.movie.subtitle['path'][len(dirname)+1:]
+                subs = subs.replace('[', '\\[').replace(']', '\\]')
             video_filters.append(f'subtitles={subs}')
 
         if video_filters:
