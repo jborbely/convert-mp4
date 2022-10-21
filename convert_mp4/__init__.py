@@ -154,9 +154,10 @@ class VideoConverter(QtWidgets.QMainWindow):
                 while True:
                     try:
                         os.remove(self.movies[title].convert_path)
+                        break
                     except PermissionError:  # file is still in use
                         time.sleep(0.1)
-                    else:
+                    except FileNotFoundError:
                         break
 
     def add_movie(self, movie):
