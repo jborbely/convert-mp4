@@ -18,10 +18,17 @@ class ConvertMovieWorker(QtCore.QRunnable):
     def __init__(self, movie, event_stop):
         super(ConvertMovieWorker, self).__init__()
         self.movie = movie
-        self.output_extension = '.mp4'
         self.signaler = ConvertMovieSignaler()
         self.regex_timestamp = re.compile(r'time=(?P<timestamp>\S+)')
         self.event_stop = event_stop
+
+        output_extension = '.mp4'
+        root, ext = os.path.splitext(movie.path)
+        if ext == output_extension:
+            self.outfile = root + '_(copy)' + output_extension
+        else:
+            self.outfile = root + output_extension
+        self.movie.convert_path = self.outfile
 
     @staticmethod
     def to_seconds(timestamp) -> float:
@@ -32,14 +39,8 @@ class ConvertMovieWorker(QtCore.QRunnable):
         return seconds
 
     def run(self):
-        root, ext = os.path.splitext(self.movie.path)
-        if ext == self.output_extension:
-            outfile = root + '_(copy)' + self.output_extension
-        else:
-            outfile = root + self.output_extension
-
-        if os.path.isfile(outfile):
-            print(f'{outfile} -- already exists')
+        if os.path.isfile(self.outfile):
+            print(f'{self.outfile} -- already exists')
             self.signaler.percentage.emit(0)
             self.signaler.error.emit('already exists')
             return
@@ -72,7 +73,7 @@ class ConvertMovieWorker(QtCore.QRunnable):
         else:
             cmd.extend(['-vcodec', 'copy'])
 
-        cmd.append(os.path.basename(outfile))
+        cmd.append(os.path.basename(self.outfile))
 
         p = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -85,10 +86,10 @@ class ConvertMovieWorker(QtCore.QRunnable):
 
             if line.startswith('Conversion failed!') or \
                     line.endswith('cannot be used together.\n'):
-                print(f'{outfile} -- ERROR: {line}')
+                print(f'{self.outfile} -- ERROR: {line}')
                 self.signaler.percentage.emit(0)
                 self.signaler.error.emit(f'ERROR: {line}')
-                os.remove(outfile)
+                os.remove(self.outfile)
                 return
 
             match = self.regex_timestamp.search(line)

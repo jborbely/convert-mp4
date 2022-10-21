@@ -18,6 +18,8 @@ class Movie(object):
         self.duration = self.get_duration()
         self.codec_info = self.get_codec_info()
 
+        self.convert_path = None  # updated by ConvertMovieWorker
+
     def __repr__(self):
         return f'Movie<{self.title}>'
 

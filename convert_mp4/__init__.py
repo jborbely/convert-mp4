@@ -147,8 +147,17 @@ class VideoConverter(QtWidgets.QMainWindow):
             time.sleep(0.1)
         for row in range(self.table.rowCount()):
             progress = self.table.cellWidget(row, 2)
-            if progress.value() != 100:
+            value = progress.value()
+            if value >= 0 and value != 100:
                 progress.setFormat('Aborted %p%')
+                title = self.table.item(row, 0).text()
+                while True:
+                    try:
+                        os.remove(self.movies[title].convert_path)
+                    except PermissionError:  # file is still in use
+                        time.sleep(0.1)
+                    else:
+                        break
 
     def add_movie(self, movie):
         self.mutex.lock()
