@@ -26,17 +26,16 @@ class Movie(object):
     def get_subtitles(self) -> dict:
         subtitles_cmd = [
             'ffprobe', '-v', 'error', '-select_streams', 's',
-            '-show_entries', 'stream=index:stream_tags=language,title',
+            '-show_entries', 'stream=index:stream_tags=language',
             '-of', 'csv=p=0', self.path
         ]
         out = subprocess.check_output(subtitles_cmd)
 
         subs = {}
         for index, line in enumerate(out.decode().splitlines()):
-            items = line.split(',')
-            if len(items) == 1 or not self.english_regex.search(items[1]):
-                continue
-            subs[f'{items[2]}[{index}:{items[0]}]'] = {'index': index, 'path': None}
+            _, language = line.split(',')
+            if self.english_regex.search(language):
+                subs[f'English[{index}]'] = {'index': index, 'path': None}
 
         name, _ = os.path.splitext(self.title)
         for srt in search(self.directory, pattern=r'\.srt$', levels=None):
