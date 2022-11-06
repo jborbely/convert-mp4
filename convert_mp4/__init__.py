@@ -4,6 +4,8 @@ import subprocess
 import sys
 import threading
 import time
+from functools import partial
+from typing import cast
 
 from msl.io import search
 from msl.qt import Button
@@ -18,6 +20,7 @@ from msl.qt.utils import screen_geometry
 
 from .workers import ConvertMovieWorker
 from .workers import LoadMovieWorker
+from .workers import LoadSubtitleWorker
 
 
 class TableDelegate(QtWidgets.QItemDelegate):
@@ -41,9 +44,11 @@ class VideoConverter(QtWidgets.QMainWindow):
         self.load_pool = QtCore.QThreadPool()
         self.convert_pool = QtCore.QThreadPool()
         self.convert_pool.setMaxThreadCount(1)
+        self.subtitle_pool = QtCore.QThreadPool()
         self.mutex = QtCore.QMutex()
         self.movies = {}
         self.paths = []
+        self.subtitle_workers: list[LoadSubtitleWorker] = []
         self.extensions = config.get('extensions', ['avi', 'mkv', 'mp4'])
         self.extensions_regex = re.compile(r'\.({})$'.format('|'.join(self.extensions)))
 
@@ -176,7 +181,8 @@ class VideoConverter(QtWidgets.QMainWindow):
         subtitles.addItem('', userData={})
         for key, value in movie.subtitles.items():
             subtitles.addItem(key, userData=value)
-        subtitles.currentIndexChanged.connect(self.update_subtitle_tooltip)
+        subtitles.currentIndexChanged.connect(partial(self.on_load_subtitle, movie.title))
+        subtitles.setAccessibleName(movie.title)
         self.table.setCellWidget(n, 1, subtitles)
 
         progress = QtWidgets.QProgressBar()
@@ -204,16 +210,32 @@ class VideoConverter(QtWidgets.QMainWindow):
             worker.signaler.error.connect(progress.setFormat)
             self.convert_pool.start(worker)
 
-    def update_subtitle_tooltip(self, index):
-        combobox = self.sender()
+    def find_combobox(self, title: str) -> QtWidgets.QComboBox:
+        for row in range(self.table.rowCount()):
+            combobox = cast(QtWidgets.QComboBox, self.table.cellWidget(row, 1))
+            if combobox.accessibleName() == title:
+                return combobox
+
+    def on_load_subtitle(self, title: str, index: int) -> None:
+        combobox = self.find_combobox(title)
+        combobox.setToolTip('')
         info = combobox.itemData(index)
-        if not info or not info['path']:
-            combobox.setToolTip('')
+        if not info:
             return
 
-        with open(info['path'], encoding='utf-8', errors='replace') as fp:
-            lines = [next(fp) for _ in range(20)]
-            combobox.setToolTip(''.join(lines))
+        movie = self.movies[title]
+        load_subtitles = LoadSubtitleWorker(movie, info)
+        load_subtitles.signaler.finished.connect(self.on_change_tooltip)
+        self.subtitle_workers.append(load_subtitles)
+        self.subtitle_pool.start(load_subtitles)
+
+    def on_change_tooltip(self, title: str, subtitles: list[str]) -> None:
+        combobox = self.find_combobox(title)
+        combobox.setToolTip(''.join(subtitles[:25]))
+        for worker in self.subtitle_workers:
+            if worker.title == title:
+                break
+        self.subtitle_workers.remove(worker)  # noqa: worker must be in the list
 
     def open(self, file_or_folder):
         if file_or_folder:

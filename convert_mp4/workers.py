@@ -8,6 +8,25 @@ from msl.qt import Signal
 from .movie import Movie
 
 
+class LoadSubtitleSignaler(QtCore.QObject):
+    finished = Signal(str, list)  # movie title, subtitles
+
+
+class LoadSubtitleWorker(QtCore.QRunnable):
+
+    def __init__(self, movie: Movie, info: dict) -> None:
+        super(LoadSubtitleWorker, self).__init__()
+        self.movie = movie
+        self.title = movie.title
+        self.path_or_index = info['path'] or info['index']
+        self.signaler = LoadSubtitleSignaler()
+
+    def run(self) -> None:
+        """Load the subtitles and emit."""
+        subtitles = self.movie.load_subtitle(self.path_or_index)
+        self.signaler.finished.emit(self.title, subtitles)
+
+
 class ConvertMovieSignaler(QtCore.QObject):
     percentage = Signal(int)
     error = Signal(str)

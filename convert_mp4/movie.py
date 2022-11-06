@@ -1,6 +1,7 @@
 import os
 import re
 import subprocess
+import tempfile
 
 from msl.io import search
 
@@ -67,3 +68,20 @@ class Movie(object):
             out = subprocess.check_output(cmd)
             info[name] = out.rstrip().decode()
         return info
+
+    def load_subtitle(self, path_or_index: str | int) -> list[str]:
+        """Load subtitles from an external file (str) or an internal stream (int)."""
+        if isinstance(path_or_index, str):
+            with open(path_or_index, encoding='utf-8', errors='replace') as fp:
+                lines = fp.readlines()
+        else:
+            outfile = os.path.join(tempfile.gettempdir(), f'{self.title}_{path_or_index}.srt')
+            cmd = [
+                'ffmpeg', '-i', self.path, '-c', 'copy',
+                '-map', f'0:s:{path_or_index}', outfile
+            ]
+            subprocess.run(cmd, stderr=subprocess.PIPE)
+            with open(outfile) as fp:
+                lines = fp.readlines()
+            os.remove(outfile)
+        return lines
