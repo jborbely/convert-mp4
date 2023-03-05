@@ -76,15 +76,25 @@ class ConvertMovieWorker(QtCore.QRunnable):
             index = self.movie.subtitle['index']
             if index is not None:
                 subs = f'{basename!r}:stream_index={index}'
+                video_filters.append(f'subtitles={subs}')
             else:
                 dirname = os.path.dirname(self.movie.path)
                 subs = self.movie.subtitle['path'][len(dirname)+1:]
-                subs = subs.replace('[', '\\[').replace(']', '\\]')
-            video_filters.append(f'subtitles={subs}')
+                if subs.endswith('.srt'):
+                    subs = subs.replace('[', '\\[').replace(']', '\\]')
+                    video_filters.append(f'subtitles={subs}')
+                else:  # .idx
+                    cmd.extend([
+                        '-canvas_size', f'{self.movie.width}x{self.movie.height}',
+                        '-i', subs,
+                        '-filter_complex', f'[1:s]crop={self.movie.width}:{self.movie.height}[s1];[0:v][s1]overlay[v]',
+                        '-map', '[v]', '-map', '0:a',
+                        '-vcodec', 'libx264'
+                    ])
 
         if video_filters:
             cmd.extend(['-vf', ', '.join(video_filters)])
-        else:
+        elif '-vcodec' not in cmd:
             cmd.extend(['-vcodec', 'copy'])
 
         if self.movie.codec['audio'] == 'mp3':

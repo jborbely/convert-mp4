@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import subprocess
@@ -54,7 +55,7 @@ class Movie:
                 subs[f'English[{index}]'] = {'index': index, 'path': None}
 
         name, _ = os.path.splitext(self.title)
-        for srt in search(self.directory, pattern=r'\.srt$', levels=None):
+        for srt in search(self.directory, pattern=r'\.(srt|idx)$', levels=None):
             if name not in srt:
                 continue
             title = os.path.basename(srt)
@@ -67,8 +68,11 @@ class Movie:
     def load_subtitle(self, path_or_index: str | int) -> list[str]:
         """Load subtitles from an external file (str) or an internal stream (int)."""
         if isinstance(path_or_index, str):
-            with open(path_or_index, encoding='utf-8', errors='replace') as fp:
-                lines = fp.readlines()
+            if path_or_index.endswith('.srt'):
+                with open(path_or_index, encoding='utf-8', errors='replace') as fp:
+                    lines = fp.readlines()
+            else:
+                lines = ['Picture-based IDX/SUB']
         else:
             outfile = os.path.join(tempfile.gettempdir(), f'{self.title}_{path_or_index}.srt')
             cmd = [
