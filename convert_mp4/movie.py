@@ -6,14 +6,15 @@ import tempfile
 from msl.io import search
 
 
-class Movie(object):
+class Movie:
+
+    english_regex = re.compile(r'eng', flags=re.IGNORECASE)
 
     def __init__(self, path):
         super(Movie, self).__init__()
         self.path = path
         self.directory, self.title = os.path.split(path)
         self.subtitle = {}
-        self.english_regex = re.compile('eng', flags=re.IGNORECASE)
 
         self.subtitles = self.get_subtitles()
         self.duration = self.get_duration()
