@@ -17,8 +17,22 @@ class Movie:
         self.subtitle = {}
 
         self.subtitles = self.get_subtitles()
-        self.duration = self.get_duration()
-        self.codec_info = self.get_codec_info()
+
+        cmd = ['ffprobe', '-v', 'error', '-of', 'json',
+               '-show_entries', 'stream:format', self.path]
+        self.metadata = json.loads(subprocess.check_output(cmd))
+
+        self.duration = float(self.metadata['format']['duration'])
+
+        self.width = -1
+        self.height = -1
+        self.codec = {}
+        for stream in self.metadata['streams']:
+            self.codec[stream['codec_type']] = stream['codec_name']
+            if self.width == -1 and 'width' in stream:
+                self.width = int(stream['width'])
+            if self.height == -1 and 'height' in stream:
+                self.height = int(stream['height'])
 
         self.convert_path = None  # updated by ConvertMovieWorker
 
@@ -49,26 +63,6 @@ class Movie:
                 subs[title] = {'index': None, 'path': srt}
 
         return dict(sorted(subs.items()))
-
-    def get_duration(self) -> float:
-        command = [
-            'ffprobe', '-v', 'error', '-show_entries', 'format=duration',
-            '-of', 'csv=p=0', self.path
-        ]
-        return float(subprocess.check_output(command))
-
-    def get_codec_info(self) -> dict:
-        # return example, {'video': 'h264', 'audio': 'aac'}
-        info = {}
-        for name in ('video', 'audio'):
-            cmd = [
-                'ffprobe', '-v', 'error', '-select_streams', name[0],
-                '-show_entries', 'stream=codec_name',
-                '-of', 'csv=p=0', self.path
-            ]
-            out = subprocess.check_output(cmd)
-            info[name] = out.rstrip().decode()
-        return info
 
     def load_subtitle(self, path_or_index: str | int) -> list[str]:
         """Load subtitles from an external file (str) or an internal stream (int)."""

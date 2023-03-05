@@ -67,13 +67,8 @@ class ConvertMovieWorker(QtCore.QRunnable):
         basename = os.path.basename(self.movie.path)
         cmd = ['ffmpeg', '-i', basename]
 
-        if self.movie.codec_info['audio'] == 'mp3':
-            cmd.extend(['-acodec', 'aac'])
-        else:
-            cmd.extend(['-acodec', 'copy'])
-
         video_filters = []
-        if self.movie.codec_info['video'] == 'hevc':
+        if self.movie.codec['video'] == 'hevc':
             cmd.extend(['-vcodec', 'libx264'])
             video_filters.append('format=yuv420p')
 
@@ -91,6 +86,11 @@ class ConvertMovieWorker(QtCore.QRunnable):
             cmd.extend(['-vf', ', '.join(video_filters)])
         else:
             cmd.extend(['-vcodec', 'copy'])
+
+        if self.movie.codec['audio'] == 'mp3':
+            cmd.extend(['-acodec', 'aac'])
+        else:
+            cmd.extend(['-acodec', 'copy'])
 
         cmd.append(os.path.basename(self.outfile))
 
