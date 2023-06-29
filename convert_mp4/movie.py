@@ -50,8 +50,7 @@ class Movie:
 
         subs = {}
         for index, line in enumerate(out.decode().splitlines()):
-            _, language = line.split(',')
-            if self.english_regex.search(language):
+            if self.english_regex.search(line):
                 subs[f'English[{index}]'] = {'index': index, 'path': None}
 
         name, _ = os.path.splitext(self.title)
