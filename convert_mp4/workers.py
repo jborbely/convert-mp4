@@ -18,12 +18,12 @@ class LoadSubtitleWorker(QtCore.QRunnable):
         super(LoadSubtitleWorker, self).__init__()
         self.movie = movie
         self.title = movie.title
-        self.path_or_index = info['path'] or info['index']
+        self.info = info
         self.signaler = LoadSubtitleSignaler()
 
     def run(self) -> None:
         """Load the subtitles and emit."""
-        subtitles = self.movie.load_subtitle(self.path_or_index)
+        subtitles = self.movie.load_subtitle(self.info)
         self.signaler.finished.emit(self.title, subtitles)
 
 
