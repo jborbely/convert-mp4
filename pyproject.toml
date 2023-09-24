@@ -1,0 +1,21 @@
+[build-system]
+requires = ['setuptools', 'setuptools-scm', 'wheel']
+build-backend = 'setuptools.build_meta'
+
+[project]
+name = 'convert-mp4'
+dynamic = ['version']
+authors = [{name = 'jborbely', email = 'jborbely@users.noreply.github.com'}]
+description = 'Convert a video to MP4 format and maybe embed English subtitles'
+readme = 'README.rst'
+requires-python = '>=3.8'
+license = {file = 'LICENSE.txt'}
+dependencies = [
+    'msl-qt[PySide6] @ git+https://github.com/MSLNZ/msl-qt.git',
+    'msl-io @ git+https://github.com/MSLNZ/msl-io.git',
+]
+
+[project.scripts]
+convert-mp4 = 'convert_mp4:run'
+
+[tool.setuptools_scm]

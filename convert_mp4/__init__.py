@@ -22,6 +22,8 @@ from .workers import ConvertMovieWorker
 from .workers import LoadMovieWorker
 from .workers import LoadSubtitleWorker
 
+__version__ = '0.1.0.dev0'
+
 
 class TableDelegate(QtWidgets.QItemDelegate):
 
