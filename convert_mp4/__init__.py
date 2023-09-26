@@ -288,6 +288,20 @@ def run():
         with open(sys.argv[1]) as fp:
             config = json.load(fp)
 
+    # disable Windows hibernation
+    previous_state = 0
+    if sys.platform == 'win32':
+        import ctypes
+        SetThreadExecutionState = ctypes.windll.kernel32.SetThreadExecutionState  # noqa
+        SetThreadExecutionState.argtypes = [ctypes.c_longlong]
+        SetThreadExecutionState.restype = ctypes.c_longlong
+        ES_CONTINUOUS = 0x80000000  # noqa
+        ES_DISPLAY_REQUIRED = 0x00000002  # noqa
+        ES_SYSTEM_REQUIRED = 0x00000001  # noqa
+        previous_state = SetThreadExecutionState(ES_CONTINUOUS | ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED)
+        if previous_state == 0:
+            print('Error calling SetThreadExecutionState')
+
     app = application()
     main = VideoConverter(config)
     main.setWindowTitle(f'MP4 Converter || ffmpeg {version}')
@@ -295,4 +309,10 @@ def run():
     rect = screen_geometry(main)
     main.resize(rect.width()//2, rect.height()//2)
     main.show()
-    sys.exit(app.exec())
+    try:
+        app.exec()
+    finally:
+        # reset Windows hibernation
+        if previous_state:
+            if SetThreadExecutionState(previous_state) == 0:  # noqa: SetThreadExecutionState exists
+                input('Cannot reset SetThreadExecutionState')
