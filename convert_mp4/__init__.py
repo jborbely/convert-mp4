@@ -153,7 +153,7 @@ class VideoConverter(QtWidgets.QMainWindow):
         while self.convert_pool.activeThreadCount() > 0:
             time.sleep(0.1)
         for row in range(self.table.rowCount()):
-            progress = self.table.cellWidget(row, 2)
+            progress = cast(QtWidgets.QProgressBar, self.table.cellWidget(row, 2))
             value = progress.value()
             if value >= 0 and value != 100:
                 progress.setFormat('Aborted %p%')
@@ -199,8 +199,8 @@ class VideoConverter(QtWidgets.QMainWindow):
         self.event_stop.clear()
         for row in range(self.table.rowCount()):
             title = self.table.item(row, 0).text()
-            subtitles = self.table.cellWidget(row, 1)
-            progress = self.table.cellWidget(row, 2)
+            subtitles = cast(QtWidgets.QComboBox, self.table.cellWidget(row, 1))
+            progress = cast(QtWidgets.QProgressBar, self.table.cellWidget(row, 2))
             progress.setFormat('%p%')
             progress.reset()
 
