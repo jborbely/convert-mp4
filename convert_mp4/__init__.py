@@ -60,7 +60,7 @@ class VideoConverter(QtWidgets.QMainWindow):
 
         open_button = Button(
             left_click=self.open_folder,
-            icon=QtWidgets.QStyle.SP_DialogOpenButton,
+            icon=QtWidgets.QStyle.StandardPixmap.SP_DialogOpenButton,
             tooltip='Open all videos in a folder (and sub-folders)'
         )
         open_button.add_menu_item(
@@ -94,7 +94,7 @@ class VideoConverter(QtWidgets.QMainWindow):
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.horizontalHeader().setSortIndicator(0, Qt.AscendingOrder)
         self.table.setItemDelegate(TableDelegate(self))
-        self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
 
         self.setCentralWidget(self.table)
 
