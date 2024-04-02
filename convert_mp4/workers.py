@@ -80,7 +80,7 @@ class ConvertMovieWorker(QtCore.QRunnable):
             else:
                 dirname = os.path.dirname(self.movie.path)
                 subs = self.movie.subtitle['path'][len(dirname)+1:]
-                if subs.endswith('.srt'):
+                if subs.endswith('.srt') or subs.endswith('.ass'):
                     subs = subs.replace('[', '\\[').replace(']', '\\]')
                     video_filters.append(f'subtitles={subs}')
                 else:  # .idx

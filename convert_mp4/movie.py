@@ -61,7 +61,7 @@ class Movie:
                 subs[f'English[{index}]'] = {'index': index, 'codec': codec, 'path': None}
 
         name, _ = os.path.splitext(self.title)
-        for srt in search(self.directory, pattern=r'\.(srt|idx)$', levels=None):
+        for srt in search(self.directory, pattern=r'\.(srt|idx|ass)$', levels=None):
             if name not in srt:
                 continue
             title = os.path.basename(srt)
@@ -78,6 +78,15 @@ class Movie:
             if ext == '.srt':
                 with open(info['path'], encoding='utf-8', errors='replace') as f:
                     return f.readlines()
+            elif ext == '.ass':
+                # convert to srt format
+                name, _ = os.path.splitext(os.path.basename(info['path']))
+                outfile = os.path.join(tempfile.gettempdir(), f'{name}.srt')
+                subprocess.run(['ffmpeg', '-i', info['path'], '-c:s', 'srt', outfile], stderr=subprocess.PIPE)
+                with open(outfile, encoding='utf-8', errors='replace') as f:
+                    lines = f.readlines()
+                os.remove(outfile)
+                return lines
             elif ext == '.idx':
                 return ['Picture-based IDX/SUB']
             else:
