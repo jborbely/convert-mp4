@@ -50,11 +50,13 @@ class ConvertMovieWorker(QtCore.QRunnable):
         self.movie.convert_path = self.outfile
 
     @staticmethod
-    def to_seconds(timestamp) -> float:
-        split = timestamp.split(':')
-        seconds = float(split[0]) * 60 * 60
-        seconds += float(split[1]) * 60
-        seconds += float(split[2])
+    def to_seconds(timestamp: str) -> float:
+        if timestamp == 'N/A':
+            return 0.0
+        h, m, s = timestamp.split(':')
+        seconds = float(h) * 60 * 60
+        seconds += float(m) * 60
+        seconds += float(s)
         return seconds
 
     def run(self):
