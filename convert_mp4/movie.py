@@ -103,8 +103,13 @@ class Movie:
         outfile = os.path.join(tempfile.gettempdir(), f'{self.title}.{ext}')
         cmd = ['ffmpeg', '-i', self.path, '-c', 'copy',
                '-map', f'0:s:{info["index"]}', outfile]
+
+        if os.path.exists(outfile):
+            os.remove(outfile)
+
         subprocess.run(cmd, stderr=subprocess.PIPE)
-        with open(outfile) as fp:
+        with open(outfile, encoding='utf-8') as fp:
             lines = fp.readlines()
         os.remove(outfile)
+
         return lines
